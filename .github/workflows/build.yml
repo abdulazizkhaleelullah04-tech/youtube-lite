@@ -1,0 +1,29 @@
+name: Build YouTube Lite
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  flatpak:
+    name: Build Flatpak
+    runs-on: ubuntu-24.04
+
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-48
+      options: --privileged
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Build Flatpak
+        uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          manifest-path: io.github.aziz.YouTubeLite.yml
+          bundle: YouTubeLite.flatpak
+          cache-key: flatpak-builder-${{ github.sha }}
+          upload-artifact: true
+          artifact-name: YouTubeLite-x86_64.flatpak
