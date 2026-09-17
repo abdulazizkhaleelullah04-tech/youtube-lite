@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.aziz.YouTubeLite</id>
+  <name>YouTube Lite</name>
+  <summary>A focused, lightweight YouTube desktop client</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <developer id="io.github.aziz">
+    <name>Aziz</name>
+  </developer>
+  <description>
+    <p>A focused YouTube desktop application built with GTK and WebKitGTK. It provides a minimal application shell, persistent web data for sign-in, YouTube-only navigation, and selectable performance modes.</p>
+  </description>
+  <launchable type="desktop-id">io.github.aziz.YouTubeLite.desktop</launchable>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.1.0" date="2026-09-17">
+      <description><p>Initial development release.</p></description>
+    </release>
+  </releases>
+</component>

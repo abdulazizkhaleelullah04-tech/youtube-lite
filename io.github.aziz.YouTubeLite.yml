@@ -1,0 +1,23 @@
+app-id: io.github.aziz.YouTubeLite
+runtime: org.gnome.Sdk
+runtime-version: '49'
+sdk: org.gnome.Sdk
+command: youtube-lite
+finish-args:
+  - --share=network
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  - --share=ipc
+modules:
+  - name: youtube-lite
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 youtube-lite /app/bin/youtube-lite
+      - install -Dm755 webext/libyoutube-lite-webextension.so /app/lib/youtube-lite/webextensions/libyoutube-lite-webextension.so
+      - install -Dm644 data/io.github.aziz.YouTubeLite.desktop /app/share/applications/io.github.aziz.YouTubeLite.desktop
+      - install -Dm644 data/io.github.aziz.YouTubeLite.metainfo.xml /app/share/metainfo/io.github.aziz.YouTubeLite.metainfo.xml
+      - install -Dm644 data/icons/hicolor/scalable/apps/io.github.aziz.YouTubeLite.svg /app/share/icons/hicolor/scalable/apps/io.github.aziz.YouTubeLite.svg
+    sources:
+      - type: dir
+        path: .

@@ -1,0 +1,14 @@
+#include <webkit/webkit-web-process-extension.h>
+#include <webkit/webkit.h>
+#include <gio/gio.h>
+#include <string.h>
+
+static GHashTable *modes;
+static const char *get_mode(WebKitWebPage *p){const char*v=g_hash_table_lookup(modes,GUINT_TO_POINTER(webkit_web_page_get_id(p)));return v?v:"lite";}
+static gboolean tracker(const char*u){static const char*t[]={"doubleclick.net","googlesyndication.com","googleadservices.com","adservice.google.com","adnxs.com","scorecardresearch.com","hotjar.com","clarity.ms","google-analytics.com",NULL};if(!u)return FALSE;for(int i=0;t[i];i++)if(strstr(u,t[i]))return TRUE;return FALSE;}
+static void css(WebKitWebPage*p){const char*m=get_mode(p);if(!g_strcmp0(m,"normal"))return;const char*c="ytd-display-ad-renderer,ytd-ad-slot-renderer,ytd-promoted-sparkles-web-renderer,ytd-in-feed-ad-layout-renderer,ytd-banner-promo-renderer,#masthead-ad,ytd-mealbar-promo-renderer{display:none!important;}";if(!g_strcmp0(m,"ultra"))c="ytd-display-ad-renderer,ytd-ad-slot-renderer,ytd-promoted-sparkles-web-renderer,ytd-in-feed-ad-layout-renderer,ytd-banner-promo-renderer,#masthead-ad,ytd-mealbar-promo-renderer,ytd-comments,#comments,ytd-live-chat-frame{display:none!important;}";char*e=g_strescape(c,"\\\"");char*j=g_strdup_printf("(()=>{let s=document.getElementById('ytlite-style');if(!s){s=document.createElement('style');s.id='ytlite-style';document.documentElement.appendChild(s)}s.textContent=\"%s\"})()",e);webkit_frame_evaluate_javascript(webkit_web_page_get_main_frame(p),j,-1,NULL,NULL,NULL,NULL,NULL);g_free(e);g_free(j);}
+static void loaded(WebKitWebPage*p,gpointer d){css(p);}
+static gboolean request(WebKitWebPage*p,WebKitURIRequest*r,gpointer d){const char*m=get_mode(p);const char*u=webkit_uri_request_get_uri(r);if(!u||!g_strcmp0(m,"normal"))return FALSE;if(tracker(u))return TRUE;if(!g_strcmp0(m,"ultra")&&(strstr(u,"/api/stats/")||strstr(u,"heartbeat")||strstr(u,"log_event")))return TRUE;return FALSE;}
+static gboolean message(WebKitWebPage*p,WebKitUserMessage*msg,gpointer d){if(g_strcmp0(webkit_user_message_get_name(msg),"ytlite-set-mode"))return FALSE;GVariant*v=webkit_user_message_get_parameters(msg);const char*m=NULL;if(v&&g_variant_is_of_type(v,G_VARIANT_TYPE_STRING))m=g_variant_get_string(v,NULL);if(m)g_hash_table_replace(modes,GUINT_TO_POINTER(webkit_web_page_get_id(p)),g_strdup(m));css(p);return TRUE;}
+static void page(WebKitWebExtension*e,WebKitWebPage*p,gpointer d){g_hash_table_insert(modes,GUINT_TO_POINTER(webkit_web_page_get_id(p)),g_strdup("lite"));g_signal_connect(p,"document-loaded",G_CALLBACK(loaded),NULL);g_signal_connect(p,"send-request",G_CALLBACK(request),NULL);g_signal_connect(p,"user-message-received",G_CALLBACK(message),NULL);}
+G_MODULE_EXPORT void webkit_web_extension_initialize(WebKitWebExtension*e){modes=g_hash_table_new_full(g_direct_hash,g_direct_equal,NULL,g_free);g_signal_connect(e,"page-created",G_CALLBACK(page),NULL);}

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=YouTube Lite
+Comment=A focused, lightweight YouTube desktop client
+Exec=youtube-lite
+Icon=io.github.aziz.YouTubeLite
+Terminal=false
+Type=Application
+Categories=AudioVideo;Video;Network;
+StartupNotify=true
