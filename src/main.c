@@ -1,4 +1,3 @@
-
 #include <gtk/gtk.h>
 #include <webkit/webkit.h>
 #include <glib.h>
