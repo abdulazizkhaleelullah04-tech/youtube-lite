@@ -1,4 +1,4 @@
-```c
+c
 #include <webkit/webkit-web-process-extension.h>
 #include <glib.h>
 
@@ -76,4 +76,3 @@ webkit_web_process_extension_initialize(
         G_CALLBACK(page_created),
         NULL);
 }
-```
