@@ -47,38 +47,27 @@ static void activate(GtkApplication *app, gpointer data) {
     gtk_window_set_title(GTK_WINDOW(window), "YouTube Lite");
     gtk_window_set_default_size(GTK_WINDOW(window), 1280, 720);
 
-    // 1. Persistent Storage Setup (Fixes Google Sign-In)
-    g_autofree char *data_dir = g_build_filename(g_get_user_data_dir(), "YouTubeLite", NULL);
-    g_autofree char *cache_dir = g_build_filename(g_get_user_cache_dir(), "YouTubeLite", NULL);
+    // 1. WebContext Initialization with Low Memory Model
+    WebKitWebContext *context = webkit_web_context_get_default();
 
-    WebKitWebsiteDataManager *manager = webkit_website_data_manager_new(
-        "base-data-directory", data_dir,
-        "base-cache-directory", cache_dir,
-        NULL
-    );
-
-    // 2. WebContext Initialization with Low Memory Model
-    WebKitWebContext *context = webkit_web_context_new_with_website_data_manager(manager);
-    g_object_unref(manager);
-
-    // Low RAM optimization setting
+    // RAM optimization for WebKitGTK 6.0
     webkit_web_context_set_cache_model(context, WEBKIT_CACHE_MODEL_DOCUMENT_VIEWER);
 
     // Register WebExtension Directory (Loads your ad blocker)
     const char *webext_dir = "/app/lib/webext";
-    webkit_web_context_set_web_extensions_directory(context, webext_dir);
+    webkit_web_context_set_web_process_extensions_directory(context, webext_dir);
 
-    // 3. Initialize WebView
-    GtkWidget *view = webkit_web_view_new_with_context(context);
-    g_object_unref(context);
-    s->webview = view;
+    // 2. Persistent Session (Saves Login Cookies)
+    g_autofree char *data_dir = g_build_filename(g_get_user_data_dir(), "YouTubeLite", NULL);
+    g_autofree char *cache_dir = g_build_filename(g_get_user_cache_dir(), "YouTubeLite", NULL);
 
-    // 4. Configure WebKit Settings & User Agent
-    WebKitSettings *settings = webkit_web_view_get_settings(WEBKIT_WEB_VIEW(view));
+    WebKitNetworkSession *network_session = webkit_network_session_new(data_dir, cache_dir);
+
+    // 3. Configure WebKit Settings & User Agent
+    WebKitSettings *settings = webkit_settings_new();
     webkit_settings_set_enable_javascript(settings, TRUE);
     webkit_settings_set_enable_media(settings, TRUE);
     webkit_settings_set_enable_webaudio(settings, TRUE);
-    webkit_settings_set_enable_hardware_acceleration(settings, TRUE);
     webkit_settings_set_enable_smooth_scrolling(settings, FALSE);
 
     // Standard Desktop User-Agent prevents Google Sign-In blocking
@@ -86,6 +75,19 @@ static void activate(GtkApplication *app, gpointer data) {
         settings, 
         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
     );
+
+    // 4. Create WebView with NetworkSession and Settings
+    GtkWidget *view = GTK_WIDGET(g_object_new(
+        WEBKIT_TYPE_WEB_VIEW,
+        "web-context", context,
+        "network-session", network_session,
+        "settings", settings,
+        NULL
+    ));
+
+    s->webview = view;
+    g_object_unref(settings);
+    g_object_unref(network_session);
 
     // 5. Build GTK4 UI Layout
     GtkWidget *root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
