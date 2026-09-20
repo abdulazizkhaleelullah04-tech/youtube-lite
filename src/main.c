@@ -1,4 +1,4 @@
-```c
+c
 #include <gtk/gtk.h>
 #include <webkit/webkit.h>
 #include <glib.h>
@@ -522,4 +522,3 @@ int main(int argc, char **argv)
 
     return status;
 }
-```
